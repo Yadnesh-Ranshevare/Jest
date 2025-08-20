@@ -4,6 +4,7 @@
 3. [Jest Set Up For Next.js](#jest-set-up-for-nextjs)
 4. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
 5. [Test to check whether role element is present or not and has all the necessary attribute or not](#test-to-check-whether-role-element-is-present-or-not-and-has-all-the-necessary-attribute-or-not)
+6. [describe / only / skip](#describe--only--skip)
 
 
 # Introduction
@@ -117,7 +118,44 @@ module.exports = {
 ```bash
 npm test
 ```
+Note: this will only display the final result of all test cases which look something like this:
+```bash
+> my-app@0.1.0 test
+> jest
 
+PASS  __test__/index.test.js
+PASS  __test__/Text/index.test.js
+
+Test Suites: 2 passed, 2 total
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        0.998 s, estimated 1 s
+Ran all test suites.
+```
+
+but if you want details result of your test cases then update your script(`package.json`) to:
+```json
+{
+  "scripts": {
+    "test": "jest --verbose"
+  }
+}
+```
+now when ever you run npm test you'll get result that look something like this:
+```bash
+PASS  __test__/index.test.js
+√ renders template text (12 ms)
+                                                                                         
+PASS  __test__/Text/index.test.js                                                                  
+√ test to check whether the text is present on the screen or not (4 ms)
+√ check whether input box is present or not (9 ms)   
+
+Test Suites: 2 passed, 2 total                                                                                                                                        
+Tests:       3 passed, 3 total
+Snapshots:   0 total
+Time:        0.991 s, estimated 1 s
+Ran all test suites.
+```
 
 [Go To Top](#content)
 
@@ -427,6 +465,72 @@ test("check whether input box is present or not",()=>{
 })
 ```
 
+
+[Go To Top](#content)
+
+---
+# describe / only / skip
+
+### What is `describe`?
+
+- `describe` is a block in Jest used to group related tests.
+- It helps organize test cases logically, making them easier to read.
+- Inside a `describe` block, you can write multiple `test` cases.
+
+Example:
+```js
+describe("Math operations", () => {
+  test("addition", () => {
+    expect(1 + 2).toBe(3);
+  });
+
+  test("subtraction", () => {
+    expect(5 - 2).toBe(3);
+  });
+});
+```
+Here:
+
+- `"Math operations"` is the group name.
+- Two test cases (`addition` and `subtraction`) belong to that group.
+- When Jest runs, the output looks nested, showing tests grouped nicely.
+
+### Nesting `describe` blocks
+You can put describe inside another describe for better organization:
+```js
+describe("Math operations", () => {
+  describe("Addition", () => {
+    test("2 + 3 = 5", () => {
+      expect(2 + 3).toBe(5);
+    });
+  });
+
+  describe("Subtraction", () => {
+    test("5 - 2 = 3", () => {
+      expect(5 - 2).toBe(3);
+    });
+  });
+});
+```
+
+### `describe.only` and `describe.skip`
+
+- `describe.only` → run only that describe block.
+
+- `describe.skip` → skip that block.
+```js
+describe.only("Addition", () => {
+  test("2 + 3 = 5", () => {
+    expect(2 + 3).toBe(5);
+  });
+});
+
+describe.skip("Subtraction", () => {
+  test("5 - 2 = 3", () => {
+    expect(5 - 2).toBe(3);
+  });
+});
+```
 
 [Go To Top](#content)
 
