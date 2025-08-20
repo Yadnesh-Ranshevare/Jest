@@ -2,6 +2,7 @@
 1. [Introduction](#introduction)
 2. [Basic Testing](#basic-testing)
 3. [Jest Set Up For Next.js](#jest-set-up-for-nextjs)
+4. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
 
 
 # Introduction
@@ -252,6 +253,123 @@ If your Next.js project uses TypeScript:
 npm install --save-dev ts-jest @types/jest
 ```
 
+
+[Go To Top](#content)
+
+---
+# Test To Check whether the text is present on the screen or not
+
+To check whether text is present on the screen or not we need to import two function
+
+1. **render:-** which render function renders a React component into a virtual DOM (not the real browser DOM) so you can test it. It lets you:
+    - Access elements inside the component
+    - Check if certain text or elements exist
+    - Simulate user interactions
+2. **screen:-** screen is an object that gives you access to all the elements in the virtual DOM that render created. Think of it as a “window” into the DOM of the component you just rendered.\
+Instead of querying from the return value of render, screen lets you directly find elements using methods like:
+    - `getByText` → find element by its text
+    - `getByRole` → find element by its role (like button, heading, etc.)
+    - `getByTestId` → find element by a `data-testid` attribute
+```js
+import { render, screen } from "@testing-library/react";
+```
+
+**Import the component you want to test**
+
+```js
+import Page from "../../src/Text/page"
+```
+Note: since in react component name starts with uppercase letter therefor, make sure to import them as uppercase even if original component starts with lowercase (it will not throw any error even if original component is in lowercase and you are importing it as a uppercase)
+
+**Start with you test case**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/Text/page"
+
+test("test to check whether the text is present on the screen or not",()=>{})
+```
+**Render you page component for testing**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/Text/page"
+
+test("test to check whether the text is present on the screen or not",()=>{
+    render(<Page/>)
+})
+```
+**check whether for the particular text using screen object**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/Text/page"
+
+test("test to check whether the text is present on the screen or not",()=>{
+    render(<Page/>)
+    const text = screen.getByText("This is a simple Next.js page")
+})
+```
+Here
+- `screen` → gives you access to all elements in the virtual DOM rendered by `render(<page />)` function.
+- `getByText(...)` → finds an element that contains the exact text you pass in.
+    - If it finds the text, it returns that DOM element.
+    - If it doesn’t find the text, it throws an error and the test fails immediately.
+
+Therefor,\
+In our example:
+```js
+screen.getByText("This is a simple Next.js page")
+```
+This looks for an element like:
+```html
+<p>This is a simple Next.js page</p>
+```
+**Confirm whether that element actually exist or not**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/Text/page"
+
+test("test to check whether the text is present on the screen or not",()=>{
+    render(<Page/>)
+    const text = screen.getByText("This is a simple Next.js page")
+    expect(text).toBeInTheDocument()
+})
+```
+Here:\
+`toBeInTheDocument()` is a matcher from Jest + `@testing-library/jest-dom`. It checks if the element actually exists in the virtual DOM.
+
+### Note:
+- `screen.getByText` → finds the element with that text.
+
+- `toBeInTheDocument()` → confirms it actually exists.
+
+**The Above test case is a case sensitive therefor to make this test case insensitive we use regular expression with the `i` flag**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/app/Text/page"
+
+test("test to check whether the text is present on the screen or not",()=>{
+    render(<Page/>)
+    const text = screen.getByText(/This is a simple Next.js page/i)
+    expect(text).toBeInTheDocument()
+})
+```
+Note: this will check whether Page contains `"This is a simple Next.js page"` or not, i.e, this will pass the test case if component has text `"This is a simple Next.js page in app router"` since expected text is present here. This is not happen in case sensitive case
+
+**Similarly you can use `getByTitle()` or `getByAltText()` for testing images**
+```js
+import {render, screen} from "@testing-library/react";
+import Page from "../../src/app/Text/page"
+
+
+test("test to check whether the image is present on the screen or not",()=>{
+    render(<Page/>)
+    const img = screen.getByTitle("simple img")
+    const imgByAlt = screen.getByAltText("simple image")
+
+    expect(img).toBeInTheDocument()
+    expect(imgByAlt).toBeInTheDocument()
+})
+```
+this is also case sensitive and has a case insensitive version with regular expression, but it also suffer from same issue i.e, it check whether the any component contain the expected text or not
 
 [Go To Top](#content)
 
