@@ -13,3 +13,13 @@ test("test to check whether the text is present on the screen or not",()=>{
 })
 
 
+test("check whether input box is present or not",()=>{
+    render(<Page/>)
+    const input = screen.getByRole("textbox")
+    const placeholder = screen.getByPlaceholderText("enter your name")
+    expect(input).toBeInTheDocument()
+    expect(placeholder).toBeInTheDocument()
+    expect(input).toHaveAttribute("type","text")
+    expect(input).toHaveAttribute("name","yadnesh")
+})
+

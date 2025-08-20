@@ -3,6 +3,7 @@
 2. [Basic Testing](#basic-testing)
 3. [Jest Set Up For Next.js](#jest-set-up-for-nextjs)
 4. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
+5. [Test to check whether role element is present or not and has all the necessary attribute or not](#test-to-check-whether-role-element-is-present-or-not-and-has-all-the-necessary-attribute-or-not)
 
 
 # Introduction
@@ -370,6 +371,62 @@ test("test to check whether the image is present on the screen or not",()=>{
 })
 ```
 this is also case sensitive and has a case insensitive version with regular expression, but it also suffer from same issue i.e, it check whether the any component contain the expected text or not
+
+[Go To Top](#content)
+
+---
+# Test to check whether role element is present or not and has all the necessary attribute or not
+
+
+1. **use `screen.getByRole()` to check whether any role element/tag is present or not**
+```js
+test("check whether input box is present or not",()=>{
+    render(<Page/>)
+    const input = screen.getByRole("textbox")   // for input tag
+    expect(input).toBeInTheDocument()
+})
+```
+Other related input roles
+| Role         | Element examples                                                           |
+| ------------ | -------------------------------------------------------------------------- |
+| `button`     | `<button>` or `<input type="button">`                                      |
+| `checkbox`   | `<input type="checkbox">`                                                  |
+| `radio`      | `<input type="radio">`                                                     |
+| `combobox`   | `<select>` or searchable dropdowns                                         |
+| `listbox`    | `<select multiple>` or custom list widgets                                 |
+| `slider`     | `<input type="range">`                                                     |
+| `spinbutton` | `<input type="number">`                                                    |
+| `switch`     | toggle switch inputs (custom or `<input type="checkbox">` with ARIA)       |
+| `searchbox`  | `<input type="search">` (some browsers treat this as a separate ARIA role) |
+| `textbox`    | `<input type="text">`, `<textarea>` (see above)                            |
+
+Some elements, like `<p>` or `<div>`, don’t have a default role, so getByRole won’t find them unless you explicitly set a role.
+
+
+You can add a role to `<p>` using the role attribute:
+```html
+<p role="alert">This is an important message</p>
+<div role="button">Click me</div>
+```
+
+2. **To check for placeholder**
+```js
+test("check whether input box is present or not",()=>{
+    render(<Page/>)
+    const placeholder = screen.getByPlaceholderText("enter your name")
+    expect(placeholder).toBeInTheDocument()
+})
+```
+3. **Check attribute using `toHaveAttribute()`**
+```js
+test("check whether input box is present or not",()=>{
+    render(<Page/>)
+    const input = screen.getByRole("textbox")
+    expect(input).toHaveAttribute("type","text")
+    expect(input).toHaveAttribute("name","yadnesh")
+})
+```
+
 
 [Go To Top](#content)
 
