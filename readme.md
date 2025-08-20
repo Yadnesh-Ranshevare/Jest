@@ -1,6 +1,7 @@
 # Content
 1. [Introduction](#introduction)
 2. [Basic Testing](#basic-testing)
+3. [Jest Set Up For Next.js](#jest-set-up-for-nextjs)
 
 
 # Introduction
@@ -17,6 +18,58 @@ It was developed by Facebook (Meta) and is widely used because it’s easy to se
 - **Snapshot testing** → captures component output and compares it later to ensure nothing breaks.
 
 
+### Classification of Testing
+1. **Manual Testing**
+- A human tester runs the app and checks if it works correctly.
+- Example: Opening a website, typing in a login form, and verifying if it logs in.
+- Pros:
+    - Good for exploring new features
+    - Finds UI/UX issues that automated tests might miss
+- Cons:
+    - Slow
+    - Repetitive
+    - Error-prone
+
+2. **Automated Testing**
+- Uses tools or frameworks (like Jest, Selenium, Cypress, Playwright) to run tests automatically.
+- Example (Jest test runs automatically when you type npm test):
+- Pros:
+    - Fast, repeatable, and can run on every code change (CI/CD pipelines)
+    - Great for regression testing (making sure old features still work)
+- Cons:
+    - Initial setup takes time
+    - Can’t fully replace human judgment (e.g., design, usability issues)
+
+### Type of Testing
+
+1. **Unit Testing**
+    - Tests a small piece of code (like a function or method).
+    - Ensures each function works as expected.
+
+2. **Integration Testing**
+    - Tests how different modules work together.
+    - Example: testing a function that calls a database and formats the result.
+
+3. **System Testing**
+    - Tests the whole application as a complete system.
+    - Checks if all parts (frontend, backend, DB, APIs) work together.
+
+4. **End-to-End (E2E) Testing**
+    - Simulates real user actions in the app.
+    - Example: Opening a website, logging in, clicking buttons.
+    - Tools: Cypress, Playwright, Selenium.
+
+5. **Regression Testing**
+    - Run old test cases again after new code changes.
+    - Ensures new updates didn’t break existing features.
+
+6. **Performance Testing**
+    - Tests speed, responsiveness, scalability.
+    - Example: How many users can the app handle at once?
+
+7. **Acceptance Testing**
+    - Done to check if the software meets business requirements.
+    - Often done by clients or QA before release.
 ### Installation
 1. Initialize npm (if you don’t already have a package.json):
 ```bach
@@ -120,6 +173,85 @@ test('adds 10 + 20 to equal 30', () => {
   expect(sum(10, 20)).toBe(30);
 });
 ```
+
+[Go To Top](#content)
+
+---
+# Jest Set Up For Next.js 
+
+**Next.js is a React framework, and Jest works well with it — but Next.js uses ESM + JSX + TypeScript (sometimes), so we need a little setup.**
+
+### Setting up Jest in a Next.js Project
+
+1. **Create a Next.js Project (if you don’t have one yet)**
+
+```bash
+npx create-next-app my-app
+cd my-app
+```
+2. **Install Jest + Helpers**
+
+```bash
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom
+```
+3. **Create `jest.setup.js`**
+```js
+import '@testing-library/jest-dom'
+```
+4. **Create `jest.config.js`**
+
+Inside your project root, add:
+```js
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+const customJestConfig = {
+  testEnvironment: 'jest-environment-jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],  
+}
+
+module.exports = createJestConfig(customJestConfig)
+```
+This config makes Jest understand Next.js (like images, CSS imports, etc.).
+
+5. **Add Script in `package.json`**
+```json
+{
+    "scripts": {
+        "test": "jest"
+    }
+}
+```
+6. **Write a Test**
+
+Example: test the default Home page.
+
+Create `__tests__/index.test.js:`
+
+```js
+import { render, screen } from '@testing-library/react'
+import Page from '../src/app/page'
+
+test('renders template text', () => {
+  render(<Page />)
+  expect(screen.getByText(/Get started by editing/i)).toBeInTheDocument()
+})
+```
+7. **Run Tests**
+```bash
+npm test
+```
+
+**Bonus (Optional: TypeScript Support)**
+
+If your Next.js project uses TypeScript:
+```bash
+npm install --save-dev ts-jest @types/jest
+```
+
 
 [Go To Top](#content)
 
