@@ -143,7 +143,7 @@ but if you want details result of your test cases then update your script(`packa
   }
 }
 ```
-now when ever you run npm test you'll get result that look something like this:
+now when ever you run `npm test` you'll get result that look something like this:
 ```bash
 PASS  __test__/index.test.js
 √ renders template text (12 ms)
@@ -158,6 +158,22 @@ Snapshots:   0 total
 Time:        0.991 s, estimated 1 s
 Ran all test suites.
 ```
+Here we have complete detail of our test cases
+```bash
+PASS  __test__/index.test.js
+√ renders template text (12 ms)
+```
+here we see that there is only one test case name `"renders template text"` in file `"__test__/Text/index.test."` which is successfully `PASS` in `12 ms` of time
+```bash
+PASS  __test__/Text/index.test.js                                                                  
+√ test to check whether the text is present on the screen or not (4 ms)
+√ check whether input box is present or not (9 ms)  
+```
+here we have two test cases in file `"__test__/Text/index.test"`
+1. `"test to check whether the text is present on the screen or not"` which `PASS` successfully in `4ms`
+
+2. `"check whether input box is present or not"` which `PASS` successfully in `9ms`
+
 
 [Go To Top](#content)
 
@@ -382,7 +398,7 @@ Here:\
 
 - `toBeInTheDocument()` → confirms it actually exists.
 
-**The Above test case is a case sensitive therefor to make this test case insensitive we use regular expression with the `i` flag**
+**The Above test case is a case-sensitive therefor to make this test case-insensitive we use regular expression with the `i` flag**
 ```js
 import {render, screen} from "@testing-library/react";
 import Page from "../../src/app/Text/page"
@@ -410,7 +426,7 @@ test("test to check whether the image is present on the screen or not",()=>{
     expect(imgByAlt).toBeInTheDocument()
 })
 ```
-this is also case sensitive and has a case insensitive version with regular expression, but it also suffer from same issue i.e, it check whether the any component contain the expected text or not
+this is also case-sensitive and has a case-insensitive version with regular expression, but it also suffer from same issue i.e, it check whether the any component contain the expected text or not
 
 [Go To Top](#content)
 
