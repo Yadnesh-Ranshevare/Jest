@@ -5,6 +5,8 @@
 4. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
 5. [Test to check whether role element is present or not and has all the necessary attribute or not](#test-to-check-whether-role-element-is-present-or-not-and-has-all-the-necessary-attribute-or-not)
 6. [describe / only / skip](#describe--only--skip)
+7. [onChange Testing](#onchange-testing)
+8. [onClick testing](#onclick-testing)
 
 
 # Introduction
@@ -531,6 +533,90 @@ describe.skip("Subtraction", () => {
   });
 });
 ```
+
+[Go To Top](#content)
+
+---
+# onChange Testing
+
+
+```js
+test('onchange testing', () => {
+  render(<Page />)
+  let input = screen.getByRole("textbox")
+  fireEvent.change(input,{target:{value:"yadnesh"}})
+  expect(input).toHaveValue("yadnesh")
+})
+```
+
+here first we are accessing all of the input felid present on the Page component
+```js
+render(<Page />)
+let input = screen.getByRole("textbox")
+```
+Then we are firing a event that simulates typing into this input field
+```js
+fireEvent.change(input,{target:{value:"yadnesh"}})
+```
+Here,
+- `fireEvent.change`:
+  - It simulates the browser’s change event on a DOM element.
+  - In the browser, a change event usually fires when a user types into an `<input>` or `<textarea>` and the value changes.
+
+- `input`:
+  - it is a first argument in `fireEvent.change`
+  - `input` is a DOM node reference (your textbox).
+
+- `{ target: { value: "yadnesh" } }`:
+  - it is a second argument in `fireEvent.change`
+  - This is the event payload.
+  - In the browser, when a real user types `"yadnesh"` into an input, the input element’s `event.target.value` becomes `"yadnesh"`.
+  - So you are mocking that behavior by passing an object with `target.value` = `"yadnesh"`.
+- Therefor in short: That line simulates typing into the input box by firing a `change` event and setting `event.target.value` = `"yadnesh"`. It’s how you “fake user input” in a test.
+
+
+### Note
+the above code will will run that test for every input box, as you are passing the reference of every input box
+```js
+let input = screen.getByRole("textbox")   // reference of all of the input box present
+```
+so if you want the test run for particular input box then pass the reference of that input box only, to do that you can use following options:
+1. `getAllByRole("textbox")[1]` → index based
+2. `getByPlaceholderText("...")` → placeholder based
+3. `getByLabelText("...")` → label based
+4. `getByDisplayValue("")` → value based
+5. `getByTestId("...")` → test id based
+6. `getByRole("textbox", { name: "..." })` → accessible name based
+
+
+
+
+[Go To Top](#content)
+
+---
+# onClick testing
+```jsx
+export default function page() {
+  const [data, setData] = useState("")
+  return (
+    <div>
+      <button onClick={() => setData("updated data")}>click me</button>
+      <h1>{data}</h1>
+    </div>
+  )
+}
+```
+Test:
+```js
+test('onClick testing', () => {
+  render(<Page />)
+  let but = screen.getByRole("button")
+  fireEvent.click(but)
+  expect(screen.getByText("updated data")).toBeInTheDocument()
+})
+```
+**This is the same syntax as that of the [onChange testing](#onchange-testing) we just fire the click event here**
+
 
 [Go To Top](#content)
 
