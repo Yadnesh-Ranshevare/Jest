@@ -7,6 +7,7 @@
 6. [describe / only / skip](#describe--only--skip)
 7. [onChange Testing](#onchange-testing)
 8. [onClick testing](#onclick-testing)
+9. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
 
 
 # Introduction
@@ -173,6 +174,15 @@ here we have two test cases in file `"__test__/Text/index.test"`
 1. `"test to check whether the text is present on the screen or not"` which `PASS` successfully in `4ms`
 
 2. `"check whether input box is present or not"` which `PASS` successfully in `9ms`
+
+
+### Naming convention
+When you write tests with Jest, the test files usually follow a standard naming convention so Jest can automatically detect and run them.
+
+There are three common ways to name test files:
+1. `*.test.js/jsx`
+2. `*.spec.js/jsx`
+3. Anything inside a `__tests__` folder
 
 
 [Go To Top](#content)
@@ -632,6 +642,96 @@ test('onClick testing', () => {
 })
 ```
 **This is the same syntax as that of the [onChange testing](#onchange-testing) we just fire the click event here**
+
+
+[Go To Top](#content)
+
+---
+# Before and After hooks of Jest
+
+In Jest, you often need to set things up before tests run and clean them up after tests finish. That’s where hooks come in.
+
+### Hooks in Jest
+
+Jest provides four main lifecycle hooks:
+
+1. `beforeAll` – runs once before all tests in a file.
+2. `afterAll` – runs once after all tests in a file.
+4. `beforeEach` – runs before every single test.
+5. `afterEach` – runs after every single test.
+
+### Example
+```js
+let data = [];
+
+beforeAll(() => {
+  // Runs once before ALL tests
+  console.log("Setting up before all tests");
+});
+
+afterAll(() => {
+  // Runs once after ALL tests
+  console.log("Cleaning up after all tests");
+});
+
+beforeEach(() => {
+  // Runs before EACH test
+  data = [1, 2, 3];
+  console.log("Setting up before each test");
+});
+
+afterEach(() => {
+  // Runs after EACH test
+  data = [];
+  console.log("Cleaning up after each test");
+});
+
+test('first test: array has 3 items', () => {
+  expect(data.length).toBe(3);
+});
+
+test('second test: first item is 1', () => {
+  expect(data[0]).toBe(1);
+});
+```
+
+### When to Use
+
+- **beforeAll / afterAll**
+  - For things that should only run once (e.g., connect to a database, start a server).
+- **beforeEach / afterEach**
+  - For things that should reset between tests (e.g., reset arrays, clear mocks, reinitialize objects).
+
+
+[Go To Top](#content)
+
+---
+# Snapshot testing
+Snapshot testing is used to capture the output of a component or function and save it as a reference (a “snapshot”).
+
+Later, when you run the tests again, Jest compares the current output with the saved snapshot.
+
+- If they match ✅ → test passes.
+- If they don’t match ❌ → test fails (something changed).
+
+```js
+import {render} from "@testing-library/react";
+import Page from "../../src/app/Text/page";
+
+test("snapshot test", () => {
+    const container = render(<Page />);
+    expect(container).toMatchSnapshot();
+});
+```
+this code will create the new folder with name `__snapshot__` where jest will store the current snapshot of the component
+
+
+### Updating the snapshot
+to update the snapshot just run the following command:
+```bash
+npm jest -- -u
+```
+this command will overwrite the current snapshot with the new one
 
 
 [Go To Top](#content)
