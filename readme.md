@@ -2,12 +2,14 @@
 1. [Introduction](#introduction)
 2. [Basic Testing](#basic-testing)
 3. [Jest Set Up For Next.js](#jest-set-up-for-nextjs)
-4. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
-5. [Test to check whether role element is present or not and has all the necessary attribute or not](#test-to-check-whether-role-element-is-present-or-not-and-has-all-the-necessary-attribute-or-not)
-6. [describe / only / skip](#describe--only--skip)
-7. [onChange Testing](#onchange-testing)
-8. [onClick testing](#onclick-testing)
-9. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
+4. [RTL query](#rtl-query)
+5. [Assertion method](#assertion-method)
+6. [Test To Check whether the text is present on the screen or not](#test-to-check-whether-the-text-is-present-on-the-screen-or-not)
+7. [Test to check whether role element is present or not and has all the necessary attribute or not](#test-to-check-whether-role-element-is-present-or-not-and-has-all-the-necessary-attribute-or-not)
+8. [describe / only / skip](#describe--only--skip)
+9. [onChange Testing](#onchange-testing)
+10. [onClick testing](#onclick-testing)
+11. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
 
 
 # Introduction
@@ -188,6 +190,7 @@ There are three common ways to name test files:
 [Go To Top](#content)
 
 ---
+
 # Basic Testing
 let say you have a function  that add to numbers
 ```js
@@ -245,6 +248,8 @@ test('adds 10 + 20 to equal 30', () => {
 [Go To Top](#content)
 
 ---
+
+
 # Jest Set Up For Next.js 
 
 **Next.js is a React framework, and Jest works well with it — but Next.js uses ESM + JSX + TypeScript (sometimes), so we need a little setup.**
@@ -324,6 +329,101 @@ npm install --save-dev ts-jest @types/jest
 [Go To Top](#content)
 
 ---
+
+# Assertion method
+An assertion method is a tool that helps you verify if your code does what you expect.
+
+If an assertion fails → the test fails.
+
+Jest gives you a global `expect()` function.\
+You write `expect(value).matcher()` → where matcher is the assertion method.
+
+### Common Matchers
+| **Matcher**           | **What it Checks**             | **Example**                         |
+| --------------------- | ------------------------------ | ----------------------------------- |
+| `.toBe(value)`        | Exact equality (like `===`)    | `expect(2 + 2).toBe(4)`             |
+| `.toEqual(value)`     | Deep equality (objects/arrays) | `expect({a:1}).toEqual({a:1})`      |
+| `.toBeTruthy()`       | Value is truthy                | `expect("hello").toBeTruthy()`      |
+| `.toBeFalsy()`        | Value is falsy                 | `expect("").toBeFalsy()`            |
+| `.toBeNull()`         | Value is `null`                | `expect(null).toBeNull()`           |
+| `.toBeUndefined()`    | Value is `undefined`           | `expect(undefined).toBeUndefined()` |
+| `.toContain(item)`    | Array/string contains item     | `expect([1,2,3]).toContain(2)`      |
+| `.toHaveLength(n)`    | Checks array/string length     | `expect("hello").toHaveLength(5)`   |
+| `.toBeGreaterThan(n)` | Value > n                      | `expect(10).toBeGreaterThan(5)`     |
+| `.toBeLessThan(n)`    | Value < n                      | `expect(2).toBeLessThan(5)`         |
+
+### Extra Matchers from React Testing Library (`@testing-library/jest-dom`)
+
+RTL adds special DOM-related assertions (via `jest-dom`):
+
+| **Matcher**                    | **What it Checks**        | **Example**                                      |
+| ------------------------------ | ------------------------- | ------------------------------------------------ |
+| `.toBeInTheDocument()`         | Element exists in DOM     | `expect(button).toBeInTheDocument()`             |
+| `.toBeVisible()`               | Element is visible        | `expect(modal).toBeVisible()`                    |
+| `.toBeDisabled()`              | Element is disabled       | `expect(button).toBeDisabled()`                  |
+| `.toBeEnabled()`               | Element is enabled        | `expect(input).toBeEnabled()`                    |
+| `.toHaveTextContent(text)`     | Element contains text     | `expect(heading).toHaveTextContent("Welcome")`   |
+| `.toHaveAttribute(attr, val?)` | Element has an attribute  | `expect(img).toHaveAttribute("src", "logo.png")` |
+| `.toHaveClass(className)`      | Element has a CSS class   | `expect(div).toHaveClass("active")`              |
+| `.toHaveStyle(style)`          | Element has inline style  | `expect(div).toHaveStyle("display: none")`       |
+| `.toBeChecked()`               | Checkbox/radio is checked | `expect(checkbox).toBeChecked()`                 |
+| `.toHaveValue(value)`          | Input has value           | `expect(input).toHaveValue("John")`              |
+
+
+### Example
+```js
+test("math works", () => {
+  expect(2 + 2).toBe(4);   // ✅ passes
+  expect(2 + 2).toBe(5);   // ❌ fails
+});
+```
+Here:
+- `expect(2 + 2)` → what you are testing.
+- `.toBe(4)` → the assertion method (the rule you’re checking).
+
+[Go To Top](#content)
+
+---
+
+
+# RTL query
+**RTL = React Testing Library.**
+
+It provides helper functions (called queries) to find elements in the rendered React component.
+
+These queries are used inside Jest tests to check if UI behaves correctly.
+
+### Types of Queries
+
+RTL gives multiple query methods, grouped mainly as:
+1. getBy* → Finds an element.
+    - If it’s not found → throws an error (test fails).
+    - Example: `getByText("Submit")`.
+2. queryBy* → Similar, but returns null instead of throwing an error.
+    - Useful for checking something should not exist.
+    - Example: `queryByText("Error message")`.
+3. findBy* → Asynchronous, waits until the element appears (default 1s).
+    - Useful when elements load after API calls or async events.
+    - Example: `findByText("Data loaded")`.
+
+
+| **Query Type**       | **What it Does**                                                            | **Example Usage**                                 |
+| -------------------- | --------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Role**             | Finds elements by their role (button, link, textbox, etc.). ✅ Best practice | `screen.getByRole("button", { name: /submit/i })` |
+| **Label Text**       | Finds form fields by their `<label>` text                                   | `screen.getByLabelText("Username")`               |
+| **Placeholder Text** | Finds input by its placeholder text                                         | `screen.getByPlaceholderText("Enter email")`      |
+| **Text**             | Finds element by the visible text inside it                                 | `screen.getByText("Hello World")`                 |
+| **Display Value**    | Finds input by the text/value it currently has                              | `screen.getByDisplayValue("John Doe")`            |
+| **Alt Text**         | Finds images by their `alt` attribute                                       | `screen.getByAltText("Profile picture")`          |
+| **Title**            | Finds element by its `title` attribute                                      | `screen.getByTitle("close button")`               |
+| **Test ID**          | Finds by `data-testid` attribute (⚠️ last option)                           | `screen.getByTestId("login-form")`                |
+
+
+[Go To Top](#content)
+
+---
+
+
 # Test To Check whether the text is present on the screen or not
 
 To check whether text is present on the screen or not we need to import two function
