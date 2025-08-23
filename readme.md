@@ -10,6 +10,8 @@
 9. [onChange Testing](#onchange-testing)
 10. [onClick testing](#onclick-testing)
 11. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
+12. [Custom Query Using Vanilla DOM APIs](#custom-query-using-vanilla-dom-apis)
+13. [Custom Query Using RTL (buildQueries & queryHelpers)](#custom-query-using-rtl-buildqueries--queryhelpers)
 
 
 # Introduction
@@ -874,6 +876,165 @@ npm jest -- -u
 ```
 this command will overwrite the current snapshot with the new one
 
+
+[Go To Top](#content)
+
+---
+# custom query using vanilla DOM APIs
+you can use the vanilla DOM APIs of js to access the element in test
+```js
+test('costume query', () => {
+  render(
+    <div>
+      <span id='important'>Important!</span>
+    </div>
+  );
+
+  const element = document.querySelector('#important')
+  expect(element).toBeInTheDocument();
+});
+``` 
+NOte:
+this is not really a "custom query" in RTL(React Testing Library) sense — it’s just bypassing RTL and using plain DOM.
+
+In React Testing Library, a custom query means extending RTL’s query system (`getBy…`, `findBy…`, `queryBy…`) so you can reuse it consistently, with RTL’s cleanup/error handling, rather than sprinkling `document.querySelector` all over.
+
+
+[Go To Top](#content)
+
+---
+# Custom query using RTL (`buildQueries` & `queryHelpers`)
+
+Suppose your app marks important items with a `data-important="true"` attribute, and you want a query to find those.
+
+to do that we must write a custom query and to do that:
+
+### Step 1: Import
+```js
+import { buildQueries, queryHelpers } from '@testing-library/react';
+``` 
+- `queryHelpers` → contains helpers like `queryAllByAttribute` (search elements by attribute).
+
+- `buildQueries` → automatically generates the family of queries (`getBy`, `getAllBy`, `findBy`, etc.) from one base query.
+
+
+### Step 2: Define Base Query
+```js
+const queryAllByImportant = (container) =>
+  queryHelpers.queryAllByAttribute('data-important', container, 'true');
+```
+- This is a function that looks inside `container` (the rendered DOM).
+
+- It finds all elements with the attribute `data-important="true"`.
+- **Example:**
+```html
+<span data-important="true">Important</span>
+```
+**Some other methods:**
+
+| Helper Method         | Description                                                |
+| --------------------- | ---------------------------------------------------------- |
+| `queryByAttribute`    | Find a single element by attribute, returns `null` if none |
+| `queryAllByAttribute` | Find all matching elements by attribute, returns an array  |
+| `getElementError`     | Construct descriptive error messages for query failures    |
+| `buildQueries`        | Build a set of RTL-style query methods from a base query   |
+| `getNodeText`         | Get an element’s full text content, normalized and trimmed |
+
+### Step 3: Generate All Variants
+```js
+const [
+  queryByImportant,
+  getAllByImportant,
+  getByImportant,
+  findAllByImportant,
+  findByImportant,
+] = buildQueries(
+  queryAllByImportant,
+  (c) => `No element with data-important found`,
+  (c) => `Multiple elements found with data-important`
+);
+```
+`buildQueries` takes three things:
+1. Base query → `queryAllByImportant`
+
+2. Error message for “not found”
+```js
+(c) => `No element with data-important found`
+```
+3. Error message for “too many found”
+```js
+(c) => `Multiple elements found with data-important`
+```
+It returns an array of functions in this exact order:
+1. `queryByImportant` → returns first match, or `null` if none found
+
+2. `getAllByImportant` → throws error if none found
+
+3. `getByImportant` → throws if none found OR more than one found
+
+4. `findAllByImportant` → async version of `getAllByImportant`
+
+5. `findByImportant` → async version of `getByImportant`
+
+
+### Step 4: Export
+```js
+export {
+  queryByImportant,
+  queryAllByImportant,
+  getAllByImportant,
+  getByImportant,
+  findAllByImportant,
+  findByImportant,
+};
+```
+
+
+### Complete query
+```js
+import { buildQueries, queryHelpers } from '@testing-library/react';
+
+// Step 1: Define your query function
+const queryAllByImportant = (container) =>
+  queryHelpers.queryAllByAttribute('data-important', container, 'true');
+
+// Step 2: Build queries (RTL provides getBy, findBy, etc.)
+const [
+  queryByImportant,
+  getAllByImportant,
+  getByImportant,
+  findAllByImportant,
+  findByImportant,
+] = buildQueries(queryAllByImportant, (c) => `No element with data-important found`, (c) => `Multiple elements found with data-important`);
+
+// Step 3: Export your custom queries
+export {
+  queryByImportant,
+  queryAllByImportant,
+  getAllByImportant,
+  getByImportant,
+  findAllByImportant,
+  findByImportant,
+};
+```
+
+### Example
+```js
+import { render } from '@testing-library/react';
+import { getByImportant } from './customQueries'; // importing the custom made query
+
+test('finds important element', () => {
+  const { container } = render(
+    <div>
+      <span>Normal</span>
+      <span data-important="true">Important!</span>
+    </div>
+  );
+
+  const importantEl = getByImportant(container);
+  expect(importantEl).toHaveTextContent('Important!');
+});
+```
 
 [Go To Top](#content)
 
