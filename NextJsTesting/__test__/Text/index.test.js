@@ -23,3 +23,12 @@ test("check whether input box is present or not",()=>{
     expect(input).toHaveAttribute("name","yadnesh")
 })
 
+test("using getByTextMethods", ()=>{
+    render(<Page/>)
+    const  textStart = screen.getByText((content, element) => content.startsWith("This"))
+    const textEnd = screen.getByText((content, element) => content.endsWith("page"))
+    const textContain = screen.getByText((content, element) => content.includes("simple"))
+    expect(textStart).toBeInTheDocument()
+    expect(textEnd).toBeInTheDocument()
+    expect(textContain).toBeInTheDocument()
+})

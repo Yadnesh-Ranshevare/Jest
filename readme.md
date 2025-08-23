@@ -521,6 +521,47 @@ test("test to check whether the text is present on the screen or not",()=>{
 ```
 Note: this will check whether Page contains `"This is a simple Next.js page"` or not, i.e, this will pass the test case if component has text `"This is a simple Next.js page in app router"` since expected text is present here. This is not happen in case sensitive case
 
+### Another syntax for using `getByText()`
+
+```js
+test("using getByTextMethods", ()=>{
+    render(<Page/>)
+    const  textStart = screen.getByText((content, element) => content.startsWith("This"))
+    const textEnd = screen.getByText((content, element) => content.endsWith("page"))
+    const textContain = screen.getByText((content, element) => content.includes("simple"))
+
+    expect(textStart).toBeInTheDocument()
+    expect(textEnd).toBeInTheDocument()
+    expect(textContain).toBeInTheDocument()
+})
+```
+Here:
+
+**Instead of passing a plain string, you passed a function:**
+- `(content, element) => content.startsWith("This")`
+- `content` → the text inside an element.
+- `element` → the actual DOM element.
+- This returns the element whose text starts with `"This"`.
+
+**How to use element**
+
+Most of the time, `content` (the text) is enough.\
+But sometimes you want to look at the element’s properties (like tag name, attributes, or class) while matching.
+
+**Example:**
+```html
+<button>Click me</button>
+<p>Click me</p>
+```
+Test:
+```js
+const buttonOnly = screen.getByText((content, element) => {
+  return content === "Click me" && element.tagName.toLowerCase() === "button"
+})
+```
+
+
+
 **Similarly you can use `getByTitle()` or `getByAltText()` for testing images**
 ```js
 import {render, screen} from "@testing-library/react";
