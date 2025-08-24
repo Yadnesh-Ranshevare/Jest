@@ -260,6 +260,20 @@ test('adds 10 + 20 to equal 30', () => {
 
 **Next.js is a React framework, and Jest works well with it — but Next.js uses ESM + JSX + TypeScript (sometimes), so we need a little setup.**
 
+
+### React Testing Library (RTL):
+React Testing Library (RTL) is a testing utility for React applications that helps you write tests that focus on how the user interacts with your app, instead of testing implementation details.
+
+1. **User-focused** → Instead of testing React internals (like state or props directly), it tests what appears on the screen (text, buttons, forms, etc.).
+
+2. **Queries like a user** → You use queries such as getByText, getByRole, getByPlaceholderText to find elements — similar to how a user perceives the UI.
+
+3. **Discourages fragile tests** → Avoids testing internal implementation that could change (e.g., class names, state).
+
+4. **Works with Jest** → Most commonly paired with Jest as the test runner and assertion library.
+
+**Note: If a piece of state doesn’t affect the DOM, React Testing Library (RTL) won’t “see” it — and by design, RTL says: “If the user can’t see it, don’t test it directly.”**
+
 ### Setting up Jest in a Next.js Project
 
 1. **Create a Next.js Project (if you don’t have one yet)**
