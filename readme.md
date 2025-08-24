@@ -1301,7 +1301,7 @@ export const handlers = [
   }),
 ]
 ```
-Here, `/api/user` could be a Next.js API route (`pages/api/user.js`) or an external API.
+Here, `/api/user` could be a Next.js API route (`app/api/user.js`) or an external API.
 
 3. **create mock server**
 
