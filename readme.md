@@ -9,9 +9,13 @@
 8. [describe / only / skip](#describe--only--skip)
 9. [onChange Testing](#onchange-testing)
 10. [onClick testing](#onclick-testing)
-11. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
-12. [Custom Query Using Vanilla DOM APIs](#custom-query-using-vanilla-dom-apis)
-13. [Custom Query Using RTL (buildQueries & queryHelpers)](#custom-query-using-rtl-buildqueries--queryhelpers)
+11. [User Event Library](#user-event-library)
+12. [act Function](#act-function)
+12. [Before and After hooks of Jest](#before-and-after-hooks-of-jest)
+13. [Custom Query Using Vanilla DOM APIs](#custom-query-using-vanilla-dom-apis)
+14. [Custom Query Using RTL (buildQueries & queryHelpers)](#custom-query-using-rtl-buildqueries--queryhelpers)
+15. [within](#within)
+16. [Api testing with msw](#api-testing-with-msw)
 
 
 # Introduction
@@ -790,6 +794,163 @@ test('onClick testing', () => {
 [Go To Top](#content)
 
 ---
+# User Event Library
+this library simulates real user interactions (typing, clicking, tabbing, selecting, etc.) in tests. It’s more realistic than RTL’s built-in fireEvent.
+
+Installation:
+```bash
+npm install --save-dev @testing-library/user-event
+```
+You import it alongside `render` and `screen` from RTL:
+
+### Examples
+
+1. **Typing into an Input**
+```jsx
+function Login() {
+  return <input placeholder="Username" />;
+}
+```
+```js
+test("user can type a username", async () => {
+  render(<Login />);
+  const input = screen.getByPlaceholderText("Username");
+
+  await userEvent.type(input, "Alice");
+
+  expect(input).toHaveValue("Alice");
+});
+```
+Here, `userEvent.type` types one character at a time, just like a real user.
+
+2. **Clicking a Button**
+```jsx
+function Counter() {
+  const [count, setCount] = React.useState(0);
+  return (
+    <>
+      <span>Count: {count}</span>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+    </>
+  );
+}
+```
+```js
+test("increments counter", async () => {
+  render(<Counter />);
+  const button = screen.getByRole("button", { name: /increment/i });
+
+  await userEvent.click(button);
+  await userEvent.click(button);
+
+  expect(screen.getByText("Count: 2")).toBeInTheDocument();
+});
+```
+
+3. **Selecting from a Dropdown**
+```jsx
+function FruitSelector() {
+  return (
+    <select>
+      <option>Apple</option>
+      <option>Banana</option>
+    </select>
+  );
+}
+```
+```js
+test("user selects Banana", async () => {
+  render(<FruitSelector />);
+  const select = screen.getByRole("combobox");
+
+  await userEvent.selectOptions(select, "Banana");
+
+  expect(screen.getByRole("option", { name: "Banana" }).selected).toBe(true);
+});
+```
+
+### Why Use `userEvent` Instead of `fireEvent`?
+
+`fireEvent` just triggers the event — not how users actually interact.
+```js
+fireEvent.change(input, { target: { value: "Alice" } });
+```
+`userEvent` simulates real typing (character by character, firing keydown/keyup/input events in the right order).
+```js
+await userEvent.type(input, "Alice");
+```
+So userEvent tests are more realistic and catch bugs closer to real-world usage.
+
+[Go To Top](#content)
+
+---
+# act Function
+`act()` is a helper from React Testing Library (actually from React’s test utilities).
+
+It makes sure that all React updates (state, effects, DOM changes) are processed before your test assertions run.
+
+### Why is it Needed?
+React updates happen asynchronously (state changes, effects, re-renders).
+
+If you assert too early, you may get warnings like:
+```vbnet
+Warning: An update to Component inside a test was not wrapped in act(...)
+```
+This means React was still updating when you tried to check.
+
+### Example Without act
+
+```jsx
+function Counter() {
+  const [count, setCount] = React.useState(0);
+  return (
+    <>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+    </>
+  );
+}
+```
+```js
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+test("increments counter", async () => {
+  render(<Counter />);
+  const button = screen.getByRole("button", { name: /increment/i });
+
+  await userEvent.click(button); // triggers state update
+
+  // React may not have finished updating yet ❌
+  expect(screen.getByText("Count: 1")).toBeInTheDocument();
+});
+```
+Sometimes this test passes, but React shows a warning about missing act.
+
+### Example With act
+```js
+import { render, screen, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import Counter from "./Counter";
+
+test("increments counter safely", async () => {
+  render(<Counter />);
+  const button = screen.getByRole("button", { name: /increment/i });
+
+  await act(async () => {
+    await userEvent.click(button);
+  });
+
+  expect(screen.getByText("Count: 1")).toBeInTheDocument();
+});
+```
+Now React is happy ✅ because we wrapped the state-changing interaction in act.
+
+
+
+[Go To Top](#content)
+
+---
 # Before and After hooks of Jest
 
 In Jest, you often need to set things up before tests run and clean them up after tests finish. That’s where hooks come in.
@@ -1035,6 +1196,216 @@ test('finds important element', () => {
   expect(importantEl).toHaveTextContent('Important!');
 });
 ```
+
+[Go To Top](#content)
+
+---
+# within
+Normally, `getBy...` or `queryBy...` in RTL searches the entire document (`screen`).\
+But sometimes, you only want to search inside a specific element. That’s where `within` comes in.
+
+### Example Without within
+Imagine you have this component:
+```jsx
+function App() {
+  return (
+    <div>
+      <section aria-label="fruits">
+        <ul>
+          <li>Apple</li>
+          <li>Banana</li>
+        </ul>
+      </section>
+
+      <section aria-label="animals">
+        <ul>
+          <li>Dog</li>
+          <li>Cat</li>
+        </ul>
+      </section>
+    </div>
+  );
+}
+```
+If you do:
+```js
+import { render, screen } from "@testing-library/react";
+import App from "./App";
+
+test("finds Banana", () => {
+  render(<App />);
+  expect(screen.getByText("Banana")).toBeInTheDocument();
+});
+```
+That works fine. But what if you want Banana only inside the fruits section?\
+If another "Banana" existed in `animals`, you’d be stuck.
+
+### Example With within
+Here’s how:
+```js
+import { render, screen, within } from "@testing-library/react";
+import App from "./App";
+
+test("finds Banana only inside fruits section", () => {
+  render(<App />);
+
+  // First, get the fruits section
+  const fruitsSection = screen.getByRole("region", { name: "fruits" });
+
+  // Now, search only inside that section
+  const banana = within(fruitsSection).getByText("Banana");
+
+  expect(banana).toBeInTheDocument();
+});
+```
+`within` limits queries to that section only.
+
+### When to Use within
+
+- When you have multiple similar elements (e.g., two tables, two lists, multiple modals).
+- When you want scoped queries for clarity and correctness.
+
+
+[Go To Top](#content)
+
+---
+# Api testing with msw
+MSW stands for Mock Service Worker.
+
+It’s a library that lets you mock API requests (HTTP, GraphQL, etc.) in both:
+
+Mocking an API Request means:
+Instead of calling the real backend, you intercept the request and return a fake (mock) response.
+
+So:
+
+- Your app → thinks it’s calling the API.
+- MSW (or Jest mocks, or other tools) → intercepts that request.
+- It returns a predefined response (like a dummy JSON).
+
+### To setup MSW
+1. **install dependencies**
+```bash
+npm install msw undici --save-dev 
+```
+2. **Create Handlers**
+
+Make a `mocks/handlers.js` file to define your mocked endpoints.
+```js
+// mocks/handlers.js
+import { http, HttpResponse } from "msw"
+
+export const handlers = [
+  http.get("/api/user", () => {
+    return HttpResponse.json({ id: 1, name: "yadnesh (mocked)" }, { status: 200 })
+  }),
+]
+```
+Here, `/api/user` could be a Next.js API route (`pages/api/user.js`) or an external API.
+
+3. **create mock server**
+
+Make a `mocks/server.js` file:
+```js
+// mocks/server.js
+import { setupServer } from "msw/node";
+import { handlers } from "./handlers";
+
+export const server = setupServer(...handlers);
+```
+
+4. **Create the `jest.polyfills.js` file**
+```js
+// jest.polyfills.js
+import { TextEncoder, TextDecoder } from 'util';
+import { ReadableStream, TransformStream, WritableStream } from 'stream/web';
+import { MessageChannel, MessagePort, BroadcastChannel } from 'worker_threads';
+
+// Polyfill TextEncoder/TextDecoder
+if (!global.TextEncoder) global.TextEncoder = TextEncoder;
+if (!global.TextDecoder) global.TextDecoder = TextDecoder;
+
+// Polyfill Web Streams
+if (!global.ReadableStream) global.ReadableStream = ReadableStream;
+if (!global.TransformStream) global.TransformStream = TransformStream;
+if (!global.WritableStream) global.WritableStream = WritableStream;
+
+// Polyfill Worker APIs
+if (!global.MessageChannel) global.MessageChannel = MessageChannel;
+if (!global.MessagePort) global.MessagePort = MessagePort;
+if (!global.BroadcastChannel) global.BroadcastChannel = BroadcastChannel;
+```
+
+5. **update `jest.setup.js`**
+
+add into your `jest.setup.js` file
+```js
+import '@testing-library/jest-dom'
+import 'whatwg-fetch';
+import { server } from "./mocks/server";  // import server
+
+beforeAll(() => server.listen()); // start the server before each test
+afterEach(() => server.resetHandlers());  // reset the server after each test
+afterAll(() => server.close()); // close the server after all test case executes
+```
+6. **Update the `jest.config.js` file**
+```js
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+const customJestConfig = {
+  testEnvironment: 'jest-environment-jsdom',
+  setupFiles: ['<rootDir>/jest.polyfills.js'], // make sure you add this above the jest.setup.js
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],  // jest.setup.js
+ 
+}
+
+module.exports = createJestConfig(customJestConfig)
+```
+
+### Test example
+```tsx
+"use client"
+
+// components/User.js
+import { useEffect, useState } from "react";
+type User = {
+    id: number;
+    name: string;
+}
+export default function User() {
+  const [user, setUser] = useState<User>({} as User);
+
+  useEffect( () => {
+    const fetchData = async ()=> {
+        await fetch("/api/user")
+            .then((res) => res.json())    // at the time of testing this will be the mock data, i.e request will not go to actual server
+            .then(setUser);
+    }
+    fetchData()
+  }, []);
+
+  if (!user) return <p>Loading...</p>;
+  return <p>Hello {user.name}</p>;
+}
+```
+ Test
+```js
+import Page from "../../src/app/Text/Apicall/page"
+import { render, screen } from "@testing-library/react"
+
+test("testing api",async()=>{
+    render(<Page/>)
+    const text = await screen.findByText("Hello yadnesh (mocked)")    // make sure to use await as fetch asynchronous operation
+    expect(text).toBeInTheDocument()
+})
+```
+
+
+
 
 [Go To Top](#content)
 

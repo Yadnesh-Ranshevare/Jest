@@ -10,6 +10,22 @@ export default function page() {
       <input type="text" value={data} onChange={(e)=>setData(e.target.value)} />
       <button onClick={() => setData("updated data")}>click me</button>
       <h1>{data}</h1>
+
+      <div>
+        <section aria-label="fruits">
+          <ul>
+            <li>Apple</li>
+            <li>Banana</li>
+          </ul>
+        </section>
+
+        <section aria-label="animals">
+          <ul>
+            <li>Dog</li>
+            <li>Cat</li>
+          </ul>
+        </section>
+      </div>
     </div>
   )
 }

@@ -27,7 +27,12 @@
     "eslint-config-next": "15.5.0",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
+    "jest-esm-transformer": "^1.0.0",
+    "msw": "^2.10.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "undici": "^7.15.0",
+    "util": "^0.12.5",
+    "whatwg-fetch": "^3.6.20"
   }
 }
